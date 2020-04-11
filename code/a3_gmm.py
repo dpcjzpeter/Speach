@@ -71,7 +71,7 @@ def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
         log_Bs = np.array(log_Bs)
         log_lik = logLik(log_Bs, myTheta)
 
-        sum_log_Bs = np.sum(log_Bs, axis=1)
+        sum_log_Bs = np.sum(log_Bs, axis=1).reshape((M, 1))
         myTheta.omega = sum_log_Bs / float(T)
         myTheta.mu = np.sum(log_Bs.dot(X), axis=1) / sum_log_Bs
         myTheta.Sigma = (np.sum(log_Bs.dot(X ** 2), axis=1) / sum_log_Bs) - (myTheta.mu ** 2)
