@@ -114,12 +114,10 @@ def train(speaker, X: np.ndarray,
     """ Train a model for the given speaker. Returns the theta
         (omega, mu, sigma)
     """
-    logging.debug("TODO handle shape = d and shape = t,d")
 
     T, d = X.shape
     my_theta = theta(speaker, M, d)
     # perform initialization (Slide 32)
-    logging.debug("TODO check random here")
     indices = random.sample(range(T), M)
     my_theta.reset_mu(X[indices])
     my_theta.reset_omega(np.ones((M, 1)) / M)
