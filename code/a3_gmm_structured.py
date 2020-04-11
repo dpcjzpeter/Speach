@@ -141,35 +141,33 @@ def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
     return myTheta
 
 
-def test(mfcc, correctID, models, k=5):
-    """ Computes the likelihood of 'mfcc' in each model in 'models', where the correct model is 'correctID'
-        If k>0, print to stdout the actual speaker and the k best likelihoods in this format:
+def test(mfcc, correctID, models, k: int = 5):
+    """ Computes the likelihood of 'mfcc' in each model in 'models',
+        where the correct model is 'correctID'
+        If k>0, print to stdout the actual speaker and the k best
+            likelihoods in this format:
                [ACTUAL_ID]
                [SNAME1] [LOGLIK1]
                [SNAME2] [LOGLIK2]
                ...
                [SNAMEK] [LOGLIKK]
-
         e.g.,
                S-5A -9.21034037197
-        the format of the log likelihood (number of decimal places, or exponent) does not matter
+        the format of the log likelihood (number of decimal places,
+            or exponent) does not matter
     """
+    preds = list()
+    for j, model in enumerate(models):
+        log_Bs = np.array([log_b_m_x(m=i, x=mfcc, myTheta=model)
+                           for i in range(models[0]._M)])
+        preds.append((j, model, logLik(log_Bs, model)))
     bestModel = -1
-    predictions = []
-    for ind, model in enumerate(models):
-        log_Bs = np.array([log_b_m_x(j, mfcc, model) for j in range(models[0].omega.shape[0])])
-
-        predictions.append((ind, model, logLik(log_Bs, model)))
-
-    if len(predictions) > 0:
-        predictions = sorted(predictions, key=lambda x: x[2])
-
-        bestModel = predictions[-1][0]
-
-        print(models[correctID].name)
-        for j in range(min(k, len(models))):
-            print('{} {}'.format(predictions[j][1].name, predictions[j][2]))
-
+    # print(models[correctID].name)
+    if len(preds) > 0:
+        preds = sorted(preds, key=lambda x: x.prob, reverse=True)
+        bestModel = preds[0].index
+        # for i in range(min(k, len(models))):
+        #     print(f"{preds[i].model.name} {preds[i].prob}")
     return 1 if (bestModel == correctID) else 0
 
 
