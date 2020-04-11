@@ -69,12 +69,11 @@ def log_b_m_x(m, x, myTheta):
     But we encourage you to use the vectorized version in your `train`
     function for faster/efficient computation.
     """
-    sigma = np.reciprocal(myTheta.Sigma[m],
-                          where=myTheta.Sigma[m] != 0)
+    sigma = np.reciprocal(myTheta.Sigma[m], where=myTheta.Sigma[m] != 0)
     if len(x.shape) == 1:
-        return -np.sum(0.5 * (x ** 2) * sigma - myTheta.mu[m] * x.T * sigma) - myTheta.precomputedForM(m)
+        return -np.sum(0.5 * (x ** 2) * sigma - (myTheta.mu[m] * x.T) * sigma) - myTheta.precomputedForM(m)
     else:
-        return -np.sum(0.5 * (x ** 2) * sigma - myTheta.mu[m] * x * sigma, axis=1) - myTheta.precomputedForM(m)
+        return -np.sum(0.5 * (x ** 2) * sigma - (myTheta.mu[m] * x) * sigma, axis=1) - myTheta.precomputedForM(m)
 
 
 def log_p_m_x(log_Bs, myTheta):
@@ -157,7 +156,7 @@ def test(mfcc, correctID, models, k=5):
     bestModel = -1
     predictions = []
     for ind, model in enumerate(models):
-        log_Bs = np.array([log_b_m_x(j, mfcc, model) for j in range(models[0].omega.shape[0])])
+        log_Bs = np.array([log_b_m_x(j, mfcc, model) for j in range(models[0]._M)])
 
         predictions.append((ind, model, logLik(log_Bs, model)))
 
@@ -202,8 +201,6 @@ if __name__ == "__main__":
                 X = np.append(X, myMFCC, axis=0)
 
             trainThetas.append(train(speaker, X, M, epsilon, maxIter))
-
-    print(trainThetas)
 
     # evaluate
     numCorrect = 0
