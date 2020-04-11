@@ -24,7 +24,7 @@ def log_b_m_x(m, x, myTheta, preComputedForM=[]):
     '''
     M, d = myTheta.mu.shape
 
-    if preComputedForM:
+    if not preComputedForM:
         return -0.5 * np.sum((x - myTheta.mu[m])**2 / myTheta.Sigma[m]) \
                - d/2 * np.log(2*np.pi) \
                - 0.5*np.log(np.prod(myTheta.Sigma[m]))
