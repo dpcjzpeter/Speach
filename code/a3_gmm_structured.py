@@ -180,7 +180,7 @@ def test(mfcc, correctID, models, k=5):
 
         print(models[correctID].name)
         for j in range(min(k, len(models))):
-            print('{} {}\n'.format(predictions[j][1].name, predictions[j][2]))
+            print('{} {}'.format(predictions[j][1].name, predictions[j][2]))
 
     return 1 if (bestModel == correctID) else 0
 
