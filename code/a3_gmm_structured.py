@@ -108,55 +108,37 @@ def logLik(log_Bs, myTheta):
     return np.sum(logsumexp(log_Bs, axis=0, b=myTheta.omega))
 
 
-def train(speaker, X: np.ndarray,
-          M: int = 8, epsilon: float = 0.0,
-          max_iter: int = 20) -> theta:
-    """ Train a model for the given speaker. Returns the theta
-        (omega, mu, sigma)
-    """
+def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
+    """ Train a model for the given speaker. Returns the theta (omega, mu, sigma)"""
+    myTheta = theta(speaker, M, X.shape[1])
 
-    T, d = X.shape
-    my_theta = theta(speaker, M, d)
+    T, _ = X.shape
     # perform initialization (Slide 32)
-    indices = random.sample(range(T), M)
-    my_theta.reset_mu(X[indices])
-    my_theta.reset_omega(np.ones((M, 1)) / M)
-    my_theta.reset_Sigma(np.ones((M, d)))
+    myTheta.reset_mu(X[random.sample(range(T), M)])
+    myTheta.reset_omega(np.ones((M, 1)) / M)
+    myTheta.reset_Sigma(np.ones((M, d)))
 
-    i = 0
-    prev_L = float('-inf')
-    improvement = float('inf')
-    while i <= max_iter and improvement >= epsilon:
-        log_Bs = np.array([log_b_m_x(m=i, x=X, myTheta=my_theta)
-                           for i in range(M)])
-        assert log_Bs.shape == (M, T), \
-            f"log_Bs is of shape {log_Bs.shape} and should be ({M}, {T})"
+    prev_log_lik, improvement = -float('inf'), float('inf')
 
-        L = logLik(log_Bs, my_theta)
-        # p_xt = np.exp(np.log(my_theta.omega) + log_Bs -
-        #               logsumexp(log_Bs, b=my_theta.omega, axis=0))
-        p_xt = log_p_m_x(log_Bs, my_theta)
-        p_xt_sum = np.sum(p_xt, axis=1).reshape((M, 1))
-        my_theta.omega = p_xt_sum / float(T)
-        my_theta.mu = np.divide(
-            p_xt.dot(X),
-            p_xt_sum,
-            out=np.zeros((M, d)), where=p_xt_sum != 0)
-        my_theta.Sigma = np.divide(
-            p_xt.dot(X ** 2),
-            p_xt_sum,
-            out=np.zeros((M, d)), where=p_xt_sum != 0) - my_theta.mu ** 2
+    for i in range(maxIter):
+        log_Bs = np.array([log_b_m_x(j, X, myTheta) for j in range(M)])
 
-        assert my_theta.omega.size == my_theta._M, \
-            "`omega` must contain M elements"
-        assert my_theta.mu.shape == (
-            my_theta._M, my_theta._d), "`mu` must be of size (M,d)"
-        assert my_theta.Sigma.shape == (
-            my_theta._M, my_theta._d), "`Sigma` must be of size (M,d)"
-        improvement = L - prev_L
-        prev_L = L
-        i += 1
-    return my_theta
+        log_lik = logLik(log_Bs, myTheta)
+
+        log_pmx = log_p_m_x(log_Bs, myTheta)
+        sum_log_pmx = np.sum(log_pmx, axis=1).reshape((M, 1))
+
+        myTheta.omega = sum_log_pmx / float(T)
+        myTheta.mu = np.sum(log_pmx.dot(X), axis=1) / sum_log_pmx
+        myTheta.Sigma = (np.sum(log_pmx.dot(X ** 2), axis=1) / sum_log_pmx) - (myTheta.mu ** 2)
+
+        improvement = log_lik - prev_log_lik
+        if improvement >= epsilon:
+            break
+
+        prev_log_lik = log_lik
+
+    return myTheta
 
 
 def test(mfcc, correctID, models, k=5):
