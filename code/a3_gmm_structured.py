@@ -69,10 +69,18 @@ def log_b_m_x(m, x, myTheta):
     But we encourage you to use the vectorized version in your `train`
     function for faster/efficient computation.
     """
+    sigma = np.reciprocal(my_theta.Sigma[m],
+                          where=my_theta.Sigma[m] != 0)
     if len(x.shape) == 1:
-        return -np.sum((0.5 * (x ** 2) - myTheta.mu(m) * x) / myTheta.Sigma[m]) - myTheta.preComputedForM(m)
+        return -np.sum(
+            0.5 * (x ** 2) * sigma
+            - (my_theta.mu[m] * (x.T)) * sigma) \
+               - my_theta.precomputedForM(m)
     else:
-        return -np.sum((0.5 * (x ** 2) - myTheta.mu(m) * x) / myTheta.Sigma[m], axis=1) - myTheta.preComputedForM(m)
+        return -np.sum(
+            0.5 * (x ** 2) * sigma
+            - my_theta.mu[m] * (x) * sigma, axis=1) \
+               - my_theta.precomputedForM(m)
 
 
 def log_p_m_x(log_Bs, myTheta):
