@@ -32,15 +32,22 @@ def log_b_m_x(m, x, myTheta, preComputedForM=[]):
         return -np.sum((0.5*(x**2) - myTheta.mu[m]*x) / myTheta.Sigma[m]) -preComputedForM[m]
 
 
-def log_p_m_x(m, x, myTheta):
-    ''' Returns the log probability of the m^{th} component given d-dimensional vector x, and model myTheta
-        See equation 2 of handout
-    '''
-    M = myTheta.omega.shape[0]
+def log_p_m_x(log_Bs, myTheta):
+    """ The newer version!!
 
-    omega_log_b_m_xs = [myTheta.omega[i].dot(log_b_m_x(i, x, myTheta, preComputedForM=[])) for i in range(M)]
+    Returns the matrix of log probabilities i.e. log of p(m|X;theta)
 
-    return myTheta.omega[m].dot(log_b_m_x(m, x, myTheta, preComputedForM=[])) / np.sum(omega_log_b_m_xs)
+    Specifically, each entry (m, t) in the output is the
+        log probability of p(m|x_t; theta)
+
+    For further information, See equation 2 of handout
+
+    Return shape:
+        same as log_Bs, np.ndarray of shape [M, T]
+
+    NOTE: For a description of `log_Bs`, refer to the docstring of `logLik` below
+    """
+    return log_Bs * myTheta.omega / np.sum(log_Bs * myTheta.omega, axis=0)
 
 
 def logLik(log_Bs, myTheta):
@@ -67,14 +74,16 @@ def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
     prev_log_lik, improvement = -float('inf'), float('inf')
 
     for i in range(maxIter):
-        log_Bs = [log_p_m_x(j, X, myTheta) for j in range(M)]
-        log_Bs = np.array(log_Bs)
+        log_Bs = np.array([log_b_m_x(j, X, myTheta) for j in range(M)])
+
         log_lik = logLik(log_Bs, myTheta)
 
-        sum_log_Bs = np.sum(log_Bs, axis=1).reshape((M, 1))
-        myTheta.omega = sum_log_Bs / float(T)
-        myTheta.mu = np.sum(log_Bs.dot(X), axis=1) / sum_log_Bs
-        myTheta.Sigma = (np.sum(log_Bs.dot(X ** 2), axis=1) / sum_log_Bs) - (myTheta.mu ** 2)
+        log_pmx = log_p_m_x(log_Bs, myTheta)
+        sum_log_pmx = np.sum(log_pmx, axis=1).reshape((M, 1))
+
+        myTheta.omega = sum_log_pmx / float(T)
+        myTheta.mu = np.sum(log_pmx.dot(X), axis=1) / sum_log_pmx
+        myTheta.Sigma = (np.sum(log_pmx.dot(X ** 2), axis=1) / sum_log_pmx) - (myTheta.mu ** 2)
 
         imporovement = log_lik - prev_log_lik
         if imporovement >= epsilon:
