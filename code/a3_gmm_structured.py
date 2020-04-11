@@ -107,7 +107,7 @@ def logLik(log_Bs, myTheta):
     return np.sum(logsumexp(log_Bs, axis=0, b=myTheta.omega))
 
 
-def train(speaker, X, M=8, epsilon=0.0, max_iter=20):
+def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
     """ Train a model for the given speaker. Returns the theta (omega, mu, sigma)"""
     myTheta = theta(speaker, M, X.shape[1])
 
@@ -117,21 +117,23 @@ def train(speaker, X, M=8, epsilon=0.0, max_iter=20):
     myTheta.reset_omega(np.ones((M, 1)) / M)
     myTheta.reset_Sigma(np.ones((M, d)))
 
+    prev_log_lik, improvement = -float('inf'), float('inf')
+
     i = 0
-    prev_L = float('-inf')
-    improvement = float('inf')
-    while i <= max_iter and improvement >= epsilon:
+    while i <= maxIter and improvement >= epsilon:
         log_Bs = np.array([log_b_m_x(j, X, myTheta) for j in range(M)])
 
-        L = logLik(log_Bs, myTheta)
+        log_lik = logLik(log_Bs, myTheta)
+
         log_pmx = log_p_m_x(log_Bs, myTheta)
         sum_log_pms = np.sum(log_pmx, axis=1).reshape((M, 1))
+
         myTheta.omega = sum_log_pms / float(T)
         myTheta.mu = log_pmx.dot(X) / sum_log_pms
         myTheta.Sigma = log_pmx.dot(X ** 2) / sum_log_pms
 
-        improvement = L - prev_L
-        prev_L = L
+        improvement = log_lik - prev_log_lik
+        prev_log_lik = log_lik
         i += 1
     return myTheta
 
@@ -164,6 +166,7 @@ def test(mfcc, correctID, models, k=5):
         print(models[correctID].name)
         for j in range(min(k, len(models))):
             print('{} {}'.format(predictions[j][1].name, predictions[j][2]))
+        print('\n')
 
     return 1 if (bestModel == correctID) else 0
 
