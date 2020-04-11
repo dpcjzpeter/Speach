@@ -174,13 +174,13 @@ def test(mfcc, correctID, models, k=5):
         predictions.append((ind, model, logLik(log_Bs, model)))
 
     if len(predictions) > 0:
-        predictions = sorted(predictions, key=lambda x: x[2])
+        predictions = sorted(predictions, key=lambda x: x[2], reverse=True)
 
-        bestModel = predictions[-1][0]
+        bestModel = predictions[0][0]
 
         print(models[correctID].name)
         for j in range(min(k, len(models))):
-            print('{} {}'.format(predictions[j][1].name, predictions[j][2]))
+            print('{} {}\n'.format(predictions[j][1].name, predictions[j][2]))
 
     return 1 if (bestModel == correctID) else 0
 
