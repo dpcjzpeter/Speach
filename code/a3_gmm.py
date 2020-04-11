@@ -9,49 +9,51 @@ dataDir = '/u/cs401/A3/data/'
 class theta:
     def __init__(self, name, M=8, d=13):
         self.name = name
+        self._d = d
         self.omega = np.zeros((M, 1))
         self.mu = np.zeros((M, d))
         self.Sigma = np.zeros((M, d))
 
+    def precomputedForM(self, m: int):
+        """
+        Put the precomputedforM for given `m` computation here
+        This is a function of `self.mu` and `self.Sigma` (see slide 32)
+        This should output a float or equivalent (array of size [1] etc.)
+        NOTE: use this in `log_b_m_x` below
+        """
+        sigma = self.Sigma[m]
+        return (
+                np.sum((self.mu[m] ** 2) / (2 * sigma))
+                + (self._d / 2) * np.log(2 * np.pi)
+                + 0.5 * np.log(np.prod(sigma)))
 
-def log_b_m_x( m, x, myTheta, preComputedForM=[] ):
-    ''' Returns the log probability of d-dimensional vector x using only component m of model myTheta
-        See equation 1 of the handout
-        As you'll see in tutorial, for efficiency, you can precompute something for 'm' that applies to all x outside of this function.
-        If you do this, you pass that precomputed component in preComputedForM
-        NOTE: Assume the type of preComputedForM is always a list
-    '''
 
-    # define variables
-    M, d = myTheta.mu.shape
-    sigmaSquare = myTheta.Sigma[m] # ** 2, already squared
-
-    # compute each term
-    term1 = (0.5 * (x ** 2)) - (myTheta.mu[m] * x)
-    term2 = np.divide(term1, sigmaSquare, out=np.zeros_like(sigmaSquare), where=(sigmaSquare != 0))
-
-    # define result
-    noPrecompute = (type(preComputedForM) != list) or (len(preComputedForM) != M)
-    if noPrecompute: # once again, assume preComputedForM type is list
-        # compute the rest of the terms
-        # 1 x d --> scaler
-        term3 = np.divide(myTheta.mu[m] ** 2, sigmaSquare, out=np.zeros_like(sigmaSquare), where=(sigmaSquare != 0))
-        term3 = (0.5) * np.sum(term3)
-        # scaler
-        term4 = (d / float(2)) * (np.log(2 * np.pi))
-        # 1 x d --> scaler
-        term5 = (0.5) * np.sum(np.log(sigmaSquare, where=(sigmaSquare != 0))) # .reshape((M, 1))
-
-        # define reutrn result and convert into list
-        result = - np.sum(term2) - term3 - term4 - term5
-        # print('compute')
+def log_b_m_x(m: int, x: np.ndarray, my_theta: theta) -> float:
+    """ Returns the log probability of d-dimensional vector x using only
+        component m of model my_theta (See equation 1 of the handout)
+    As you'll see in tutorial, for efficiency, you can precompute
+    something for 'm' that applies to all x outside of this function.
+    Use `my_theta.preComputedForM(m)` for this.
+    Return shape:
+        (single row) if x.shape == [d], then return value is float
+            (or equivalent)
+        (vectorized) if x.shape == [T, d], then return shape is [T]
+    You should write your code such that it works for both types of inputs.
+    But we encourage you to use the vectorized version in your `train`
+    function for faster/efficient computation.
+    """
+    sigma = np.reciprocal(my_theta.Sigma[m],
+                          where=my_theta.Sigma[m] != 0)
+    if len(x.shape) == 1:
+        return -np.sum(
+            0.5 * (x ** 2) * sigma
+            - (my_theta.mu[m] * (x.T)) * sigma) \
+            - my_theta.precomputedForM(m)
     else:
-        result = - np.sum(term2) - preComputedForM[m] # scaler
-        # print('preocomputed used')
-
-    # print ( 'log_b_m_x: {} \n'.format(result) )
-
-    return result
+        return -np.sum(
+            0.5 * (x ** 2) * sigma
+            - my_theta.mu[m] * (x) * sigma, axis=1) \
+            - my_theta.precomputedForM(m)
 
 
 def log_p_m_x(log_Bs, myTheta):
