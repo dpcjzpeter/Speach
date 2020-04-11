@@ -155,18 +155,22 @@ def test(mfcc, correctID, models, k=5):
         the format of the log likelihood (number of decimal places, or exponent) does not matter
     """
     bestModel = -1
+    predictions = []
+    for ind, model in enumerate(models):
+        log_Bs = np.array([log_b_m_x(j, mfcc, model) for j in range(models[0].omega.shape[0])])
+
+        predictions.append((ind, model, logLik(log_Bs, model)))
     lst_log_Bs = [np.array([log_b_m_x(i, mfcc, model) for i in range(models[0].omega.shape[0])])
                   for model in models]
 
-    predictions = [(i, model, logLik(lst_log_Bs[i], model)) for i, model in enumerate(models)]
+    if len(predictions) > 0:
+        predictions = sorted(predictions, key=lambda x: x[2])
 
-    predictions = sorted(predictions, key=lambda x: x[2])
+        bestModel = predictions[-1][0]
 
-    bestModel = predictions[-1][0]
-
-    print(models[correctID].name)
-    for i in range(min(k, len(models))):
-        print('{} {}'.format(predictions[i][1].name, predictions[i][2]))
+        print(models[correctID].name)
+        for i in range(min(k, len(models))):
+            print('{} {}'.format(predictions[i][1].name, predictions[i][2]))
 
     return 1 if (bestModel == correctID) else 0
 
