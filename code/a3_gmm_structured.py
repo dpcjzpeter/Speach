@@ -121,7 +121,7 @@ def train(speaker, X, M=8, epsilon=0.0, max_iter=20):
     prev_L = float('-inf')
     improvement = float('inf')
     while i <= max_iter and improvement >= epsilon:
-        log_Bs = np.array([log_b_m_x(j, X, myTheta) for i in range(M)])
+        log_Bs = np.array([log_b_m_x(j, X, myTheta) for j in range(M)])
 
         L = logLik(log_Bs, myTheta)
         log_pmx = log_p_m_x(log_Bs, myTheta)
