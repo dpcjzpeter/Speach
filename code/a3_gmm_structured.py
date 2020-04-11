@@ -127,7 +127,7 @@ def train(speaker, X: np.ndarray,
     prev_L = float('-inf')
     improvement = float('inf')
     while i <= max_iter and improvement >= epsilon:
-        log_Bs = np.array([log_b_m_x(m=i, x=X, my_theta=my_theta)
+        log_Bs = np.array([log_b_m_x(m=i, x=X, myTheta=my_theta)
                            for i in range(M)])
         assert log_Bs.shape == (M, T), \
             f"log_Bs is of shape {log_Bs.shape} and should be ({M}, {T})"
