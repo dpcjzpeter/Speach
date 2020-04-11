@@ -120,7 +120,7 @@ def train(speaker, X, M=8, epsilon=0.0, maxIter=20):
 
     prev_log_lik, improvement = -float('inf'), float('inf')
 
-    for i in range(maxIter):
+    for itr in range(maxIter):
         log_Bs = np.array([log_b_m_x(j, X, myTheta) for j in range(M)])
 
         log_lik = logLik(log_Bs, myTheta)
@@ -160,8 +160,6 @@ def test(mfcc, correctID, models, k=5):
         log_Bs = np.array([log_b_m_x(j, mfcc, model) for j in range(models[0].omega.shape[0])])
 
         predictions.append((ind, model, logLik(log_Bs, model)))
-    lst_log_Bs = [np.array([log_b_m_x(i, mfcc, model) for i in range(models[0].omega.shape[0])])
-                  for model in models]
 
     if len(predictions) > 0:
         predictions = sorted(predictions, key=lambda x: x[2])
@@ -169,8 +167,8 @@ def test(mfcc, correctID, models, k=5):
         bestModel = predictions[-1][0]
 
         print(models[correctID].name)
-        for i in range(min(k, len(models))):
-            print('{} {}'.format(predictions[i][1].name, predictions[i][2]))
+        for j in range(min(k, len(models))):
+            print('{} {}'.format(predictions[j][1].name, predictions[j][2]))
 
     return 1 if (bestModel == correctID) else 0
 
