@@ -69,7 +69,7 @@ def log_b_m_x(m, x, myTheta):
     But we encourage you to use the vectorized version in your `train`
     function for faster/efficient computation.
     """
-    return -np.sum((0.5 * (x ** 2) - myTheta.mu[m] * x) / myTheta.Sigma[m], axis=1) - myTheta.preComputedForM[m]
+    return -np.sum((0.5 * (x ** 2) - myTheta.mu[m] * x) / myTheta.Sigma[m], axis=1) - myTheta.preComputedForM(m)
 
 
 def log_p_m_x(log_Bs, myTheta):
