@@ -9,51 +9,27 @@ dataDir = '/u/cs401/A3/data/'
 class theta:
     def __init__(self, name, M=8, d=13):
         self.name = name
-        self._d = d
         self.omega = np.zeros((M, 1))
         self.mu = np.zeros((M, d))
         self.Sigma = np.zeros((M, d))
 
-    def precomputedForM(self, m: int):
-        """
-        Put the precomputedforM for given `m` computation here
-        This is a function of `self.mu` and `self.Sigma` (see slide 32)
-        This should output a float or equivalent (array of size [1] etc.)
-        NOTE: use this in `log_b_m_x` below
-        """
-        sigma = self.Sigma[m]
-        return (
-                np.sum((self.mu[m] ** 2) / (2 * sigma))
-                + (self._d / 2) * np.log(2 * np.pi)
-                + 0.5 * np.log(np.prod(sigma)))
 
+def log_b_m_x(m, x, myTheta, preComputedForM=[]):
+    ''' Returns the log probability of d-dimensional vector x using only component m of model myTheta
+        See equation 1 of the handout
 
-def log_b_m_x(m: int, x: np.ndarray, my_theta: theta) -> float:
-    """ Returns the log probability of d-dimensional vector x using only
-        component m of model my_theta (See equation 1 of the handout)
-    As you'll see in tutorial, for efficiency, you can precompute
-    something for 'm' that applies to all x outside of this function.
-    Use `my_theta.preComputedForM(m)` for this.
-    Return shape:
-        (single row) if x.shape == [d], then return value is float
-            (or equivalent)
-        (vectorized) if x.shape == [T, d], then return shape is [T]
-    You should write your code such that it works for both types of inputs.
-    But we encourage you to use the vectorized version in your `train`
-    function for faster/efficient computation.
-    """
-    sigma = np.reciprocal(my_theta.Sigma[m],
-                          where=my_theta.Sigma[m] != 0)
-    if len(x.shape) == 1:
-        return -np.sum(
-            0.5 * (x ** 2) * sigma
-            - (my_theta.mu[m] * (x.T)) * sigma) \
-            - my_theta.precomputedForM(m)
+        As you'll see in tutorial, for efficiency, you can precompute something for 'm' that applies to all x outside of this function.
+        If you do this, you pass that precomputed component in preComputedForM
+
+    '''
+    M, d = myTheta.mu.shape
+
+    if not preComputedForM:
+        return -0.5 * np.sum((x - myTheta.mu[m])**2 / myTheta.Sigma[m]) \
+               - d/2 * np.log(2*np.pi) \
+               - 0.5*np.log(np.prod(myTheta.Sigma[m]))
     else:
-        return -np.sum(
-            0.5 * (x ** 2) * sigma
-            - my_theta.mu[m] * (x) * sigma, axis=1) \
-            - my_theta.precomputedForM(m)
+        return -np.sum((0.5*(x**2) - myTheta.mu[m]*x) / myTheta.Sigma[m]) -preComputedForM[m]
 
 
 def log_p_m_x(log_Bs, myTheta):
@@ -133,7 +109,7 @@ def test(mfcc, correctID, models, k=5):
     '''
     #bestModel = -1
 
-    lst_log_Bs = [np.array([log_p_m_x(i, mfcc, model) for i in range(models[0].omega.shape[0])])
+    lst_log_Bs = [np.array([log_b_m_x(i, mfcc, model) for i in range(models[0].omega.shape[0])])
                   for model in models]
 
     predictions = [(i, model, logLik(lst_log_Bs[i], model)) for i, model in enumerate(models)]
