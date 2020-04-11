@@ -14,22 +14,44 @@ class theta:
         self.Sigma = np.zeros((M, d))
 
 
-def log_b_m_x(m, x, myTheta, preComputedForM=[]):
+def log_b_m_x( m, x, myTheta, preComputedForM=[] ):
     ''' Returns the log probability of d-dimensional vector x using only component m of model myTheta
         See equation 1 of the handout
-
         As you'll see in tutorial, for efficiency, you can precompute something for 'm' that applies to all x outside of this function.
         If you do this, you pass that precomputed component in preComputedForM
-
+        NOTE: Assume the type of preComputedForM is always a list
     '''
-    M, d = myTheta.mu.shape
 
-    if not preComputedForM:
-        return -0.5 * np.sum((x - myTheta.mu[m])**2 / myTheta.Sigma[m]) \
-               - d/2 * np.log(2*np.pi) \
-               - 0.5*np.log(np.prod(myTheta.Sigma[m]))
+    # define variables
+    M, d = myTheta.mu.shape
+    sigmaSquare = myTheta.Sigma[m] # ** 2, already squared
+
+    # compute each term
+    term1 = (0.5 * (x ** 2)) - (myTheta.mu[m] * x)
+    term2 = np.divide(term1, sigmaSquare, out=np.zeros_like(sigmaSquare), where=(sigmaSquare != 0))
+
+    # define result
+    noPrecompute = (type(preComputedForM) != list) or (len(preComputedForM) != M)
+    if noPrecompute: # once again, assume preComputedForM type is list
+        # compute the rest of the terms
+        # 1 x d --> scaler
+        term3 = np.divide(myTheta.mu[m] ** 2, sigmaSquare, out=np.zeros_like(sigmaSquare), where=(sigmaSquare != 0))
+        term3 = (0.5) * np.sum(term3)
+        # scaler
+        term4 = (d / float(2)) * (np.log(2 * np.pi))
+        # 1 x d --> scaler
+        term5 = (0.5) * np.sum(np.log(sigmaSquare, where=(sigmaSquare != 0))) # .reshape((M, 1))
+
+        # define reutrn result and convert into list
+        result = - np.sum(term2) - term3 - term4 - term5
+        # print('compute')
     else:
-        return -np.sum((0.5*(x**2) - myTheta.mu[m]*x) / myTheta.Sigma[m]) -preComputedForM[m]
+        result = - np.sum(term2) - preComputedForM[m] # scaler
+        # print('preocomputed used')
+
+    # print ( 'log_b_m_x: {} \n'.format(result) )
+
+    return result
 
 
 def log_p_m_x(log_Bs, myTheta):
