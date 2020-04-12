@@ -158,3 +158,50 @@ if __name__ == "__main__":
     for i in range(0, len(testMFCCs)):
         numCorrect += test(testMFCCs[i], i, trainThetas, k)
     accuracy = 1.0 * numCorrect / len(testMFCCs)
+
+    if os.path.isfile('./gmmDiscussion.txt'):
+        outputFile = open("gmmDiscussion.txt", 'a')
+    else:
+        outputFile = open("gmmDiscussion.txt", 'w')
+
+    outputFile.write('Test M with maxIter = 20 and Speakers = 32 \n\n')
+    # # outputFile.write('Test maxIter with M = 8 and Speakers = 32 \n\n')
+    # # outputFile.write('Test Speakers with M = 8 and maxIter = 20 \n\n')
+    # # outputFile.write('Test Speakers with M = 8 and maxIter = 20 and totalSpeakers = 32 \n\n')
+    for M in tqdm(MList):
+        trainThetas = []
+        testMFCCs = []
+        count = 0
+        for subdir, dirs, files in os.walk(dataDir):
+            for speaker in dirs:
+                print( speaker )
+
+                files = fnmatch.filter(os.listdir( os.path.join( dataDir, speaker ) ), '*npy')
+                random.shuffle( files )
+
+                if count < numSpeakers:
+                testMFCC = np.load( os.path.join( dataDir, speaker, files.pop() ) )
+    #             testMFCCs.append( testMFCC )
+    #             # if count < numSpeakers:
+    #             X = np.empty((0,d))
+    #             for file in files:
+    #                 myMFCC = np.load( os.path.join( dataDir, speaker, file ) )
+    #                 X = np.append( X, myMFCC, axis=0)
+
+    #             trainThetas.append( train(speaker, X, M, epsilon, maxIter) )
+    #             # count += 1
+    #             # else:
+    #                 # break
+    #                 # trainThetas.append( theta( speaker, M, d ) )
+
+    #     # evaluate
+    #     numCorrect = 0
+    #     for i in range(0,len(testMFCCs)):
+    #         numCorrect += test( testMFCCs[i], i, trainThetas, k )
+    #     accuracy = 1.0*numCorrect/len(testMFCCs)
+    #     outputFile.write("M: {0} \t Accuracy: {1: 1.4f} \n".format(M, accuracy))
+    #     # outputFile.write("maxIter: {0} \t Accuracy: {1: 1.4f} \n".format(maxIter, accuracy))
+    #     # outputFile.write("Total Speakers: {0} \t Accuracy: {1: 1.4f} \n".format(numSpeakers, accuracy))
+    #     # outputFile.write("Known Training Speakers: {0} \t Accuracy: {1: 1.4f} \n".format(numSpeakers, accuracy))
+    # outputFile.write('\n\n')
+    # outputFile.close()

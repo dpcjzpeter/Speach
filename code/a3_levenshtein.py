@@ -4,8 +4,6 @@ import re
 import string
 from scipy import stats
 
-from pathlib import Path
-
 dataDir = '/u/cs401/A3/data/'
 
 
@@ -85,117 +83,82 @@ def Levenshtein(r, h):
     return R[N, M] / float(N), int(R[N, M] - sum(count)), count[0], count[1]
 
 
-def preprocess_lines(lines):
-    processed_lines = list()
-    for line in lines:
-        line = line.lower()\
-                   .replace("\n", " ")\
-                   .replace("\r", " ")
-        line = re.sub(r"\s+", " ", line)
-        line = line.strip()
+# helper to preprocess each line
+def preprocess(line):
+    line = line.lower()
+    line = line.replace('\n', ' ').replace('\r', ' ')
+    line = re.sub(r"\s+", " ", line)
+    line = line.strip()
 
-        remove = string.punctuation
-        remove = remove.replace("[", "")
-        remove = remove.replace("]", "")
-        pattern = r"[{}]".format(remove)
+    # punctuations without '[' and ']'
+    stripped_punctuation = string.punctuation
+    stripped_punctuation = stripped_punctuation.replace('[', '').replace(']', '')
+    pattern = re.compile(r'[{}]'.format(stripped_punctuation))
 
-        line = re.sub(pattern, " ", line)
-        line = re.sub(' +', ' ', line)
-        line = line.strip()
-        processed_lines.append(line)
-    return processed_lines
+    line = re.sub(pattern, ' ', line)
+    line = re.sub(' +', ' ', line)
+    line = line.strip()
+
+    return line
+
+
+def helper(lines):
+    if lines[-1] == '':
+        return lines[:-1]
+    return lines
 
 
 if __name__ == "__main__":
-    out_file = open("asrDiscussion.txt", "w")
-    kaldi_err = list()
-    google_err = list()
-    print("Sanity check")
+    kaldi_err, google_err = [], []
 
-    for speaker in Path(dataDir).iterdir():
-        print(f"speaker: {speaker}")
-        ref_lines = (speaker / 'transcripts.txt').open().read().split('\n')
-        if ref_lines[-1] == '':
-            ref_lines = ref_lines[:-1]
-        ref_lines = preprocess_lines(ref_lines)
+    for subdir, dirs, files in os.walk(dataDir):
+        for speaker in dirs:
+            trans_path = os.path.join(dataDir, speaker, 'transcripts.txt')
 
-        kaldi_lines = (
-            speaker / 'transcripts.Kaldi.txt').open().read().split('\n')
-        if kaldi_lines[-1] == '':
-            kaldi_lines = kaldi_lines[:-1]
-        kaldi_lines = preprocess_lines(kaldi_lines)
+            trans_google_path = os.path.join(dataDir, speaker, 'transcripts.Google.txt')
+            trans_kaldi_path = os.path.join(dataDir, speaker, 'transcripts.Kaldi.txt')
 
-        google_lines = (
-            speaker / 'transcripts.Google.txt').open().read().split('\n')
-        if google_lines[-1] == '':
-            google_lines = google_lines[:-1]
-        google_lines = preprocess_lines(google_lines)
+            trans_lines = open(trans_path, 'r').read().split('\n')
+            old_lines = helper(trans_lines)
+            trans_lines = []
+            for i, line in enumerate(old_lines):
+                trans_lines.append(preprocess(line))
 
-        num_lines = min(len(ref_lines), len(kaldi_lines), len(google_lines))
+            google_lines = open(trans_google_path, 'r').read().split('\n')
+            old_lines = helper(google_lines)
+            google_lines = []
+            for i, line in enumerate(old_lines):
+                google_lines.append(preprocess(line))
 
-        speaker_name = str(speaker).split('/')[-1]
-        for i in range(num_lines):
-            print(f"line: {i} / {num_lines}")
-            ref_list = ref_lines[i].split()
-            kaldi_list = kaldi_lines[i].split()
-            google_list = google_lines[i].split()
+            kaldi_lines = open(trans_kaldi_path, 'r').read().split('\n')
+            old_lines = helper(kaldi_lines)
+            kaldi_lines = []
+            for i, line in enumerate(old_lines):
+                kaldi_lines.append(preprocess(line))
 
-            kaldi_err_temp = Levenshtein(ref_list, kaldi_list)
-            google_err_temp = Levenshtein(ref_list, google_list)
+            for i in range(min(len(trans_lines), len(google_lines), len(kaldi_lines))):
+                google_result = Levenshtein(trans_lines, google_lines)
+                kaldi_result = Levenshtein(trans_lines, kaldi_lines)
 
-            out_file.write(
-                '{0} {1} {2} {3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
-                    speaker_name, 'Kaldi', i,
-                    kaldi_err_temp[0], kaldi_err_temp[1], kaldi_err_temp[2],
-                    kaldi_err_temp[3]))
-            out_file.write(
-                '{0} {1} {2} {3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
-                    speaker_name, 'Google', i,
-                    google_err_temp[0], google_err_temp[1], google_err_temp[2],
-                    google_err_temp[3]))
-            kaldi_err.append(kaldi_err_temp)
-            google_err.append(google_err_temp)
+                google_err.append(google_result[0])
+                kaldi_err.append(kaldi_result[0])
 
-        out_file.write('\n')
+                # [SPEAKER] [SYSTEM] [i]  [WER] S:[numSubstitutions], I:[numInsertions], D:[numDeletions]
+                print('{0} {1} {2}  {3:1.4f} S:{4}, I:{5}, D:{6}'.format(speaker, 'Google', i,
+                                                                        google_result[0], google_result[1],
+                                                                        google_result[2], google_result[3]))
 
-    kaldi_err = np.array(kaldi_err)
+                print('{0} {1} {2}  {3:1.4f} S:{4}, I:{5}, D:{6}'.format(speaker, 'Kaldi', i,
+                                                                        kaldi_result[0], kaldi_result[1],
+                                                                        kaldi_result[2], kaldi_result[3]))
+            print('\n')
+
     google_err = np.array(google_err)
-    t_value, p_value = stats.ttest_ind(
-        google_err, kaldi_err, equal_var=False)
-    if not isinstance(t_value, float):
-        t_value = t_value[0]
-    if not isinstance(p_value, float):
-        p_value = p_value[0]
-    output =\
-        'Google WER Average: {0: .4f}, Google WER Standard Deviation: ' +\
-        '{1: 1.4f}\nKaldi WER Average: {2: .4f}, Kaldi WER Standard ' +\
-        'Deviation: {3: .4f}\n'
-    out_file.write(output.format(
-        np.mean(google_err[:, 0]), np.std(
-            google_err[:, 0]), np.mean(kaldi_err[:, 0]),
-        np.std(kaldi_err[:, 0])))
-    output =\
-        'Google S Average: {0: .4f}, Google S Standard Deviation: ' +\
-        '{1: 1.4f}\nKaldi S Average: {2: .4f}, Kaldi S Standard ' +\
-        'Deviation: {3: .4f}\n'
-    out_file.write(output.format(
-        np.mean(google_err[:, 1]), np.std(
-            google_err[:, 1]), np.mean(kaldi_err[:, 1]),
-        np.std(kaldi_err[:, 1])))
-    output =\
-        'Google I Average: {0: .4f}, Google I Standard Deviation: ' +\
-        '{1: 1.4f}\nKaldi I Average: {2: .4f}, Kaldi I Standard ' +\
-        'Deviation: {3: .4f}\n'
-    out_file.write(output.format(
-        np.mean(google_err[:, 2]), np.std(
-            google_err[:, 2]), np.mean(kaldi_err[:, 2]),
-        np.std(kaldi_err[:, 2])))
-    output =\
-        'Google D Average: {0: .4f}, Google D Standard Deviation: ' +\
-        '{1: 1.4f}\nKaldi D Average: {2: .4f}, Kaldi D Standard ' +\
-        'Deviation: {3: .4f}\n'
-    out_file.write(output.format(
-        np.mean(google_err[:, 3]), np.std(
-            google_err[:, 3]), np.mean(kaldi_err[:, 3]),
-        np.std(kaldi_err[:, 3])))
-    out_file.close()
+    kaldi_err = np.array(kaldi_err)
+
+    print('Google WER Average: {0:1.4f}, Google WER Standard Deviation: {1:1.4f}\n'
+          'Kaldi WER Average: {2:1.4f}, Kaldi Standard Deviation: {3:1.4f}'.format(np.mean(google_err),
+                                                                                   np.std(google_err),
+                                                                                   np.mean(kaldi_err),
+                                                                                   np.std(kaldi_err)))
+

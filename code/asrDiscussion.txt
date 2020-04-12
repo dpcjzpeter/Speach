@@ -538,9 +538,5 @@ S-24D Google 11  0.4783 S:23, I:1, D:31
 
 Google WER Average:  0.3981, Google WER Standard Deviation:  0.1151
 Kaldi WER Average:  0.2682, Kaldi WER Standard Deviation:  0.0983
-Google S Average:  42.2767, Google S Standard Deviation:  32.7978
-Kaldi S Average:  37.6245, Kaldi S Standard Deviation:  27.2936
-Google I Average:  2.5652, Google I Standard Deviation:  2.7821
-Kaldi I Average:  5.9802, Kaldi I Standard Deviation:  5.1816
-Google D Average:  57.8379, Google D Standard Deviation:  41.5721
-Kaldi D Average:  23.3241, Kaldi D Standard Deviation:  19.4239
+
+

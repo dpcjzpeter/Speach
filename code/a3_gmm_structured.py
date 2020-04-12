@@ -207,3 +207,5 @@ if __name__ == "__main__":
     for i in range(0, len(testMFCCs)):
         numCorrect += test(testMFCCs[i], i, trainThetas, k)
     accuracy = 1.0 * numCorrect / len(testMFCCs)
+    print(len(testMFCCs))
+    print(accuracy)

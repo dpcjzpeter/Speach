@@ -1,0 +1,135 @@
+Fixing maxIter=20, #speakers=32
+M: 1, accuracy: 0.9375
+M: 2, accuracy: 1.0
+M: 3, accuracy: 0.9375
+M: 5, accuracy: 0.96875
+M: 8, accuracy: 0.97675
+
+-
+
+Discussion:
+
+For each experiment with the variations in seeds, there isn't a common trend of accuracy relating to value of M. In some cases, accuracy gets worse, and in others better as M decreases. Observationally, this can be seen above.
+
+As far as reasoning goes, invariant of the seed, sometimes the GMMs might get instantiated closer to the latent distribution (therefore needs less tuning). Since the theta.mu is instantiated using the subset of training vectors, it could happen upon center clusters from the get go.
+
+But, looking at the results, it seems that uni-model distributions can model each speaker's latent distribution of utterances quite well, and we don't (always) get better by increasing M.
+
+########################################################################
+
+Effect of Training Iterations (max_iter) on Accuracy
+M: 8, max_iter: 0, num_speakers: 32, seed: 0, Accuracy: 0.9375
+M: 8, max_iter: 5, num_speakers: 32, seed: 0, Accuracy: 0.9375
+M: 8, max_iter: 10, num_speakers: 32, seed: 0, Accuracy: 1.0
+M: 8, max_iter: 15, num_speakers: 32, seed: 0, Accuracy: 0.90625
+M: 8, max_iter: 20, num_speakers: 32, seed: 0, Accuracy: 1.0
+
+M: 8, max_iter: 0, num_speakers: 32, seed: 100, Accuracy: 0.9375
+M: 8, max_iter: 5, num_speakers: 32, seed: 100, Accuracy: 1.0
+M: 8, max_iter: 10, num_speakers: 32, seed: 100, Accuracy: 1.0
+M: 8, max_iter: 15, num_speakers: 32, seed: 100, Accuracy: 0.96875
+M: 8, max_iter: 20, num_speakers: 32, seed: 100, Accuracy: 1.0
+
+M: 8, max_iter: 0, num_speakers: 32, seed: 375, Accuracy: 0.875
+M: 8, max_iter: 5, num_speakers: 32, seed: 375, Accuracy: 0.96875
+M: 8, max_iter: 10, num_speakers: 32, seed: 375, Accuracy: 0.9375
+M: 8, max_iter: 15, num_speakers: 32, seed: 375, Accuracy: 1.0
+M: 8, max_iter: 20, num_speakers: 32, seed: 375, Accuracy: 1.0
+
+--
+
+Discussion:
+*note: max_iter=0 actually has one training loop
+
+In this case, there does seem to be a general trend of increased accuracy with an increase in max_iter. Thus, accuracy is proportional to the number of training iterations.
+
+It is worth noting though that accuracy tends to plateau out (reach maximal) as around max_iter=5, indicating a fast convergence.
+
+It appears that seed can have an effect here as well. There doesn't seem to be a correlation between the seed value, but rather some seeds pull training starting points that better initializes the model.
+
+########################################################################
+
+Effect of Number of Speakers (S) on Accuracy (Unseen Data Allowed)
+M: 8, max_iter: 5, num_speakers: 4, seed: 0, Accuracy: 0.8
+M: 8, max_iter: 5, num_speakers: 8, seed: 0, Accuracy: 0.88888
+M: 8, max_iter: 5, num_speakers: 16, seed: 0, Accuracy: 0.94117
+M: 8, max_iter: 5, num_speakers: 24, seed: 0, Accuracy: 0.96
+M: 8, max_iter: 5, num_speakers: 32, seed: 0, Accuracy: 0.96875
+
+M: 8, max_iter: 5, num_speakers: 4, seed: 100, Accuracy: 0.8
+M: 8, max_iter: 5, num_speakers: 8, seed: 100, Accuracy: 0.88888
+M: 8, max_iter: 5, num_speakers: 16, seed: 100, Accuracy: 0.941176
+M: 8, max_iter: 5, num_speakers: 24, seed: 100, Accuracy: 0.96
+M: 8, max_iter: 5, num_speakers: 32, seed: 100, Accuracy: 1.0
+
+M: 8, max_iter: 5, num_speakers: 4, seed: 375, Accuracy: 0.8
+M: 8, max_iter: 5, num_speakers: 8, seed: 375, Accuracy: 0.8888888
+M: 8, max_iter: 5, num_speakers: 16, seed: 375, Accuracy: 0.8823529
+M: 8, max_iter: 5, num_speakers: 24, seed: 375, Accuracy: 0.92
+M: 8, max_iter: 5, num_speakers: 32, seed: 375, Accuracy: 0.9375
+
+--
+
+Discussion:
+
+This experiment is interesting. There is a strong correlation to num_speakers and the accuracy. Increasing the num_speaker directly contributes to a better accuracy, when testing on speakers that weren't seen during training.
+
+When testing on omitted speakers, the accuracy tanks.
+
+########################################################################
+
+Effect of Number of Speakers (S) on Accuracy (Unseen Data Disallowed)
+M: 8, max_iter: 3, num_speakers: 32, seed: 0.0, Accuracy: 0.96875
+M: 8, max_iter: 3, num_speakers: 24, seed: 0.0, Accuracy: 0.96
+M: 8, max_iter: 3, num_speakers: 16, seed: 0.0, Accuracy: 0.882352
+M: 8, max_iter: 3, num_speakers: 8, seed: 0.0, Accuracy: 0.888888
+M: 8, max_iter: 3, num_speakers: 4, seed: 0.0, Accuracy: 0.8
+
+M: 8, max_iter: 3, num_speakers: 32, seed: 100, Accuracy: 0.96875
+M: 8, max_iter: 3, num_speakers: 24, seed: 100, Accuracy: 0.84
+M: 8, max_iter: 3, num_speakers: 16, seed: 100, Accuracy: 0.941176
+M: 8, max_iter: 3, num_speakers: 8, seed: 100, Accuracy: 0.888888
+M: 8, max_iter: 3, num_speakers: 4, seed: 100, Accuracy: 0.8
+
+M: 8, max_iter: 3, num_speakers: 32, seed: 375, Accuracy: 0.96875
+M: 8, max_iter: 3, num_speakers: 24, seed: 375, Accuracy: 0.96
+M: 8, max_iter: 3, num_speakers: 16, seed: 375, Accuracy: 0.941176
+M: 8, max_iter: 3, num_speakers: 8, seed: 375, Accuracy: 0.888888
+M: 8, max_iter: 3, num_speakers: 4, seed: 375, Accuracy: 0.8
+
+--
+
+Discussion:
+
+Similar results to the previous case, but this time we don't test on unseen speakers. Still, there is a strong correlation to number of speakers and how well the tests go.
+
+########################################################################
+ANSWERS
+########################################################################
+
+1. How might you improve the classification accuracy of the Gaussian mixtures, without adding more
+training data?
+  (a) maybe tune M
+     In a perfect world, M would be tuned to equal the number of clusters in the latent distribution. Theoretically, you could match X points perfectly with X clusters.
+
+     The issue though is that this would require trial and error, and even from my experiments, there didn't seem to be a strong correlation.
+  (b) increas max_iter
+     As seen from my experiements, increasing the number of training loops will increase the accuracy of the model in testing. It was quick at converging in these experiments, so less important for our data but still meaningful.
+
+     There should also be checks to make sure our model is not overfitting (divergence) and maybe early stops to stop the training early if so significant improvement in accuracy is made.
+
+  (c) multiple starting points
+     Sometimes, we can find a local minima but not global. A common solution is to let our model instantiate itself different ways (mu, omega, sigma) and perform multiple training loops and pick the best one. This isn't particularly efficient though...
+
+2. When would your classifier decide that a given test utterance comes from none of the trained speaker
+models, and how would your classifier come to this decision?
+
+This would happen if the log-likelihood produced by all the models was -INF for that utterance (meaning the likelihood = 0). If every model says the likelihood = 0, or very close to it, then neither model is saying that the utterance comes from a speaker of theirs or one they know.
+
+I never observed such a phenomenon in any of the training experiments I did. As I said though, the GMM models would need to output a likelihood  = 0, so maybe a threshold based approach would allow for such identification. Meaning if the likelihood is really small, then the log-likelihood would be very large negative, but maybe not infinity, so threshold at some large negative number. This threshold could be determined experimentally for cases where you know the models should not know who that utterance comes from.
+
+3. Can you think of some alternative methods for doing speaker identification that don’t use Gaussian mixtures?
+
+Two approaches that are sometimes used are principle component analysis (PCA) and k-means clustering.
+
+They would operating similarly to GMMs, where k-means clustering is used to define clusters given the training data of utterances and speakers, and given a new utterance, speaker identification is done by associating the utterance to the most likely cluster (harder to identify unknown speakers). For PCA, similar idea but now use eigen-decomposition (finding principle components). When given a new utterance, compare principal components and associate with closest vector in terms of similarity.
