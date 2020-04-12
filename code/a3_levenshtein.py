@@ -113,8 +113,8 @@ if __name__ == "__main__":
 
             trans_path = os.path.join(dataDir, speaker, 'transcripts.txt')
 
-            trans_google_path = os.path.join(dataDir, speaker, 'transcripts.google.txt')
-            trans_kaldi_path = os.path.join(dataDir, speaker, 'transcripts.kaldi.txt')
+            trans_google_path = os.path.join(dataDir, speaker, 'transcripts.Google.txt')
+            trans_kaldi_path = os.path.join(dataDir, speaker, 'transcripts.Kaldi.txt')
 
             trans_lines = open(trans_path, 'r').read().split('\n')
             trans_lines = helper(trans_lines)
