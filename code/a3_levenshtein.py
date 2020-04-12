@@ -6,6 +6,10 @@ from scipy import stats
 
 dataDir = '/u/cs401/A3/data/'
 
+
+UP_LEFT = {'up': 1, 'left': 2}
+
+
 def Levenshtein(r, h):
     """                                                                         
     Calculation of WER with Levenshtein distance.                               
@@ -54,11 +58,11 @@ def Levenshtein(r, h):
             R[i, j] = min([R[i - 1, j] + 1, R[i - 1, j - 1], R[i, j - 1] + 1])
 
             if R[i, j] == R[i - 1, j] + 1:
-                B[i, j] = 'up'
+                B[i, j] = UP_LEFT['up']
             elif R[i, j] == R[i, j - 1] + 1:
-                B[i, j] = 'left'
+                B[i, j] = UP_LEFT['left']
             else:
-                B[i, j] = 'up-left'
+                B[i, j] = UP_LEFT['up'] + UP_LEFT['left']
 
     r = N
     c = M
@@ -66,13 +70,13 @@ def Levenshtein(r, h):
     while True:
         if r <= 0 and c <= 0:
             break
-        if B[r, c] == 'up':
+        if B[r, c] == UP_LEFT['up']:
             count[1] += 1
             r -= 1
-        if B[r, c] == 'left':
+        if B[r, c] == UP_LEFT['left']:
             count[0] += 1
             c -= 1
-        if B[r, c] == 'up-left':
+        if B[r, c] == UP_LEFT['up'] + UP_LEFT['left']:
             r -= 1
             c -= 1
 
