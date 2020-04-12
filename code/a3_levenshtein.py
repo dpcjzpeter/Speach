@@ -151,12 +151,12 @@ if __name__ == "__main__":
             google_err_temp = Levenshtein(ref_list, google_list)
 
             out_file.write(
-                '{0} {1} {2} WER:{3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
+                '{0} {1} {2} {3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
                     speaker_name, 'Kaldi', i,
                     kaldi_err_temp[0], kaldi_err_temp[1], kaldi_err_temp[2],
                     kaldi_err_temp[3]))
             out_file.write(
-                '{0} {1} {2} WER:{3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
+                '{0} {1} {2} {3: 1.4f} S:{4}, I:{5}, D:{6}\n'.format(
                     speaker_name, 'Google', i,
                     google_err_temp[0], google_err_temp[1], google_err_temp[2],
                     google_err_temp[3]))
