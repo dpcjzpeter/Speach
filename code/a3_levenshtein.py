@@ -1,86 +1,88 @@
-from typing import List, Tuple
-from pathlib import Path
-from scipy import stats
-from enum import Enum
-
+import os
 import numpy as np
-import operator
-import string
 import re
+import string
+from scipy import stats
+
+from pathlib import Path
 
 dataDir = '/u/cs401/A3/data/'
-# dataDir = '../data'
 
 
-class BackTrackElement(Enum):
-    # corresponds to indexes
-    UP = 0
-    LEFT = 2
-    UP_LEFT = 1
+UP_LEFT = {'up': 1, 'left': 2}
 
 
-def Levenshtein(r: List[str], h: List[str]) -> Tuple[float, int, int, int]:
+def Levenshtein(r, h):
+    """                                                                         
+    Calculation of WER with Levenshtein distance.                               
+                                                                                
+    Works only for iterables up to 254 elements (uint8).                        
+    O(nm) time ans space complexity.                                            
+                                                                                
+    Parameters                                                                  
+    ----------                                                                  
+    r : list of strings                                                                    
+    h : list of strings                                                                   
+                                                                                
+    Returns                                                                     
+    -------                                                                     
+    (WER, nS, nI, nD): (float, int, int, int) WER, number of substitutions, insertions, and deletions respectively
+                                                                                
+    Examples                                                                    
+    --------                                                                    
+    >>> wer("who is there".split(), "is there".split())                         
+    0.333 0 0 1                                                                           
+    >>> wer("who is there".split(), "".split())                                 
+    1.0 0 0 3                                                                           
+    >>> wer("".split(), "who is there".split())                                 
+    Inf 0 3 0                                                                           
     """
-    Calculation of WER with Levenshtein distance.
-    Works only for iterables up to 254 elements (uint8).
-    O(nm) time ans space complexity.
-    Parameters
-    ----------
-    r : list of strings
-    h : list of strings
-    Returns
-    -------
-    (WER, nS, nI, nD): (float, int, int, int) WER, number of substitutions,
-    insertions, and deletions respectively
-    Examples
-    --------
-    >>> wer("who is there".split(), "is there".split())
-    0.333 0 0 1
-    >>> wer("who is there".split(), "".split())
-    1.0 0 0 3
-    >>> wer("".split(), "who is there".split())
-    Inf 0 3 0
-    """
-    N = len(r)  # num reference words
-    M = len(h)  # num hypothesis words
+    N, M = len(r), len(h)
+
     if N == 0 and M == 0:
-        return (float(0), 0, 0, 0)
+        return float(0), 0, 0, 0
     if N == 0 and M != 0:
-        return (float('inf'), 0, M, 0)
+        return float('inf'), 0, M, 0
     if N != 0 and M == 0:
-        return (1., 0, 0, N)
-    # TODO +2?
-    B = np.zeros((N+1, M+1))  # backtracking matrix
-    R = np.zeros((N+1, M+1))  # matrix of distances
-    R[0, :] = np.arange(M+1)
-    R[:, 0] = np.arange(N+1)
-    for i in range(1, N+1):
-        for j in range(1, M+1):
-            val = 1 if r[i-1] != h[j-1] else 0
-            B[i, j], R[i, j] = min(enumerate(
-                [R[i-1, j] + 1,  # deletion error (UP)
-                 R[i-1, j-1] + val,  # UP_LEFT
-                 R[i, j-1] + 1]),  # insertion error # LEFT
-                key=operator.itemgetter(1))
-    row = N
-    col = M
-    counts = [0, 0]
-    while True:
-        if row <= 0 and col <= 0:
-            break
-        if B[row, col] == BackTrackElement.UP.value:
-            counts[1] += 1
-            row -= 1
-        if B[row, col] == BackTrackElement.LEFT.value:
-            counts[0] += 1
-            col -= 1
-        if B[row, col] == BackTrackElement.UP_LEFT.value:
-            row -= 1
-            col -= 1
+        return 1., 0, 0, N
 
-    return (R[N, M] / float(N),
-            int(R[N, M] - counts[0] - counts[1]),
-            counts[0], counts[1])
+    R, B = np.zeros((N + 1, M + 1)), np.zeros((N + 1, M + 1))
+
+    R[0, :] = np.arange(M + 1)
+    R[:, 0] = np.arange(N + 1)
+
+    for i in range(1, N + 1):
+        for j in range(1, M + 1):
+
+            if r[i - 1] != h[j - 1]:
+                R[i - 1, j - 1] += 1
+
+            R[i, j] = min([R[i - 1, j] + 1, R[i - 1, j - 1], R[i, j - 1] + 1])
+
+            if R[i, j] == R[i - 1, j] + 1:
+                B[i, j] = UP_LEFT['up']
+            elif R[i, j] == R[i, j - 1] + 1:
+                B[i, j] = UP_LEFT['left']
+            else:
+                B[i, j] = UP_LEFT['up'] + UP_LEFT['left']
+
+    r = N
+    c = M
+    count = [0, 0]
+    while True:
+        if r <= 0 and c <= 0:
+            break
+        if B[r, c] == UP_LEFT['up']:
+            count[1] += 1
+            r -= 1
+        if B[r, c] == UP_LEFT['left']:
+            count[0] += 1
+            c -= 1
+        if B[r, c] == UP_LEFT['up'] + UP_LEFT['left']:
+            r -= 1
+            c -= 1
+
+    return R[N, M] / float(N), int(R[N, M] - sum(count)), count[0], count[1]
 
 
 def preprocess_lines(lines: List[str]) -> str:
