@@ -111,10 +111,10 @@ if __name__ == "__main__":
         for speaker in dirs:
             print(speaker)
 
-            trans_path = os.path.join(dataDir, 'transcripts.txt')
+            trans_path = os.path.join(dataDir, speaker, 'transcripts.txt')
 
-            trans_google_path = os.path.join(dataDir, 'transcripts.google.txt')
-            trans_kaldi_path = os.path.join(dataDir, 'transcripts.kaldi.txt')
+            trans_google_path = os.path.join(dataDir, speaker, 'transcripts.google.txt')
+            trans_kaldi_path = os.path.join(dataDir, speaker, 'transcripts.kaldi.txt')
 
             trans_lines = open(trans_path, 'r').read().split('\n')
             trans_lines = helper(trans_lines)
