@@ -111,13 +111,6 @@ if __name__ == "__main__":
     kaldi_err = list()
     google_err = list()
     print("Sanity check")
-    print(f'Got: {Levenshtein("who is there".split(), "is there".split())}')
-    print("Expected: (0.333, 0, 0, 1)")
-    print(f'Got: {Levenshtein("who is there".split(), "".split())}')
-    print("Expected: (1.0, 0, 0, 3)")
-    print(f'Got: {Levenshtein("".split(), "who is there".split())}')
-    print("Expected: (Inf, 0, 3, 0)")
-    print("\n")
 
     for speaker in Path(dataDir).iterdir():
         print(f"speaker: {speaker}")
