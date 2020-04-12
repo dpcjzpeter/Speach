@@ -85,7 +85,7 @@ def Levenshtein(r, h):
     return R[N, M] / float(N), int(R[N, M] - sum(count)), count[0], count[1]
 
 
-def preprocess_lines(lines: List[str]) -> str:
+def preprocess_lines(lines):
     processed_lines = list()
     for line in lines:
         line = line.lower()\
